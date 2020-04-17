@@ -15,11 +15,37 @@
 
 </div>
 
+<div class="clubInfo">
+  {id: 619204,
+  resource_state: 3,
+  name: "Votary Cycles",
+  profile_medium: "avatar/club/medium.png",
+  profile: "avatar/club/large.png",
+  cover_photo: null,
+  cover_photo_small: null,
+  sport_type: "cycling",
+  city: "Chicago",
+  state: "Illinois",
+  country: "United States",
+  private: false,
+  member_count: 11,
+  featured: false,
+  verified: false,
+  url: "votary",
+  membership: "member",
+  admin: false,
+  owner: false,
+  description: "Votary cycles designs and builds handmade steel bicycle frames in Chicago, IL.",
+  club_type: "company",
+  following_count: 0}
+</div>
+
 <div id="testApp" class="">
   <table id="rankTable">
     <thead>
       <td>Rank</td>
       <td>Athlete</td>
+      <td>Ride Name</td>
       <td>Distance</td>
       <td>Moving Time</td>
       <td>Elapsed Time</td>
@@ -47,7 +73,7 @@
   var refreshToken = "";
 
 
-  var getFirst = function() {
+  var getFirst = function(accessToken) {
     return new Promise(function(resolve, reject) {
       $.ajax({
         type: "POST",
@@ -61,59 +87,95 @@
           $("#firstInfo").append("<p>result.access_token: " + accessToken + "</p>");
           $("#firstInfo").append("<p>result.refresh_token: " + refreshToken + "</p>");
           resolve(accessToken);
+        },
+        error: function(err) {
+          reject(err);
         }
       })
     })
   };
 
 
-  var getMyStuff = function(accessToken) {
-    console.warn(accessToken);
-    $.ajax({
-      type: "GET",
-      url: "https://www.strava.com/api/v3/athlete/activities?access_token=" + accessToken,
-      // headers: {
-      //   "Authorization": "Bearer 4933dc6ae6bc08b3ad1a754e06f6cd797b16f56e"
-      // },
-      success: function(result) {
-        console.warn(result);
-      },
-      error: function(err) {
-        throw "getMyStuff failed";
-      }
-    })
-  };
+  // var getMyStuff = function(accessToken) {
+  //   console.warn(accessToken);
+  //   $.ajax({
+  //     type: "GET",
+  //     url: "https://www.strava.com/api/v3/clubs/votary?access_token=" + accessToken,
+  //     // headers: {
+  //     //   "Authorization": "Bearer 4933dc6ae6bc08b3ad1a754e06f6cd797b16f56e"
+  //     // },
+  //     success: function(result) {
+  //       console.warn(result);
+  //     },
+  //     error: function(err) {
+  //       throw "getMyStuff failed";
+  //     }
+  //   })
+  // };
   // getMyStuff(accessToken);
 
 
-  var doIt = function() {
-    $.ajax({
-      // url: "https://www.strava.com/api/v3/athlete/activities?access_token=0bd793a821f6cc75aeec8f076e0aeaec350016b2",
-      url: "https://www.strava.com/api/v3/clubs/votary/activities?access_token=" + accessToken,
-      success: function(result) {
-        console.log(result);
-        // $("testApp").html(result);
-        result = result.sort(function(a, b) {
-          return b.distance - a.distance;
-        }); // longest distance first
-        console.log(result);
-        for (var i = 0; i < result.length; i++) {
-          $("#rankTable").append("<tr class='result'><td clas='rank'>" + (i + 1) + "<td class='athlete'>" + result[i]["athlete"]["firstname"] + " " + result[i]["athlete"]["lastname"] + "</td><td class='distance'>" + result[i]["distance"] +
-            "</td><td class='moving_time'>" + result[i]["moving_time"] + "</td><td class='elapsed_time'>" + result[i]["elapsed_time"] + "</td><td class='total_elevation_gain'>" + result[i]["total_elevation_gain"] + "</td></tr>")
+  var getVotary = function(accessToken) {
+    return new Promise(function(resolve, reject) {
+      console.warn(accessToken);
+      $.ajax({
+        type: "GET",
+        url: "https://www.strava.com/api/v3/clubs/votary?access_token=" + accessToken,
+        // headers: {
+        //   "Authorization": "Bearer 4933dc6ae6bc08b3ad1a754e06f6cd797b16f56e"
+        // },
+        success: function(result) {
+          console.log('getVotary success');
+          console.warn(result);
+          resolve(accessToken);
+        },
+        error: function(err) {
+          console.log('getVotary fail');
+          // throw "getMyStuff failed";
+          reject(err);
         }
-        // $("#rankTable").append("<tr>"++"<td></td>"++"<td></td>"++"<td></td>"++"<td></td>"++"<td></td>"++"<td></td>"++"<td></td></tr>")
-      }
-    });
+      })
+    })
   };
 
 
-  var errorHandler = function(){
+  var getClubActivities = function(accessToken) {
+    return new Promise(function(resolve, reject) {
+      $.ajax({
+        // url: "https://www.strava.com/api/v3/athlete/activities?access_token=0bd793a821f6cc75aeec8f076e0aeaec350016b2",
+        url: "https://www.strava.com/api/v3/clubs/votary/activities?access_token=" + accessToken + "&page=1&per_page=100",
+        success: function(result) {
+          console.log(result);
+          // $("testApp").html(result);
+          result = result.sort(function(a, b) {
+            return b.distance - a.distance;
+          }); // longest distance first
+          console.log(result);
+          for (var i = 0; i < result.length; i++) {
+            $("#rankTable").append("<tr class='result'><td clas='rank'>" + (i + 1) + "<td class='athlete'>" + result[i]["athlete"]["firstname"] + " " + result[i]["athlete"]["lastname"] + "<td class='rideName'>" + result[i]["name"] +
+              "</td><td class='distance'>" + result[i]["distance"] +
+              "</td><td class='moving_time'>" + result[i]["moving_time"] + "</td><td class='elapsed_time'>" + result[i]["elapsed_time"] + "</td><td class='total_elevation_gain'>" + result[i]["total_elevation_gain"] + "</td></tr>")
+          }
+          // $("#rankTable").append("<tr>"++"<td></td>"++"<td></td>"++"<td></td>"++"<td></td>"++"<td></td>"++"<td></td>"++"<td></td></tr>")
+        },
+        error: function(err){
+          // console.warn(err);
+          reject(err);
+        }
+      });
+    })
+  };
+
+
+  var errorHandler = function(err) {
+    console.warn(err);
     throw "failure";
   }
 
   document.addEventListener("DOMContentLoaded", function() {
     getFirst()
-      .then(doIt)
+      .then(getVotary)
+      .then(getClubActivities)
       .catch(errorHandler)
   })
 </script>
