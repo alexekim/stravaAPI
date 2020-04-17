@@ -1,4 +1,4 @@
-<style >
+<style>
 
 
   #testApp table, th, td {
@@ -11,6 +11,9 @@
 <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
 
 
+<div class="" id="firstInfo">
+
+</div>
 
 <div id="testApp" class="">
   <table id="rankTable">
@@ -40,10 +43,53 @@
   //
   // getInfo();
 
+  var accessToken = "";
+  var refreshToken = "";
+
+
+  var getFirst = function() {
+    return new Promise(function(resolve, reject) {
+      $.ajax({
+        type: "POST",
+        url: "https://www.strava.com/oauth/token?client_id=11052&client_secret=0689beebbf2bc637783d4d9d97f298afa28280a4&refresh_token=ea0ed7faa7240af9cb5b5a563a374b9fedbd2191&grant_type=refresh_token",
+        success: function(result) {
+          var result = result;
+          console.log(result);
+          accessToken = result.access_token;
+          refreshToken = result.refresh_token;
+          $("#firstInfo").append("<p>result.token_type: " + result.token_type + "</p>");
+          $("#firstInfo").append("<p>result.access_token: " + accessToken + "</p>");
+          $("#firstInfo").append("<p>result.refresh_token: " + refreshToken + "</p>");
+          resolve(accessToken);
+        }
+      })
+    })
+  };
+
+
+  var getMyStuff = function(accessToken) {
+    console.warn(accessToken);
+    $.ajax({
+      type: "GET",
+      url: "https://www.strava.com/api/v3/athlete/activities?access_token=" + accessToken,
+      // headers: {
+      //   "Authorization": "Bearer 4933dc6ae6bc08b3ad1a754e06f6cd797b16f56e"
+      // },
+      success: function(result) {
+        console.warn(result);
+      },
+      error: function(err) {
+        throw "getMyStuff failed";
+      }
+    })
+  };
+  // getMyStuff(accessToken);
+
+
   var doIt = function() {
     $.ajax({
       // url: "https://www.strava.com/api/v3/athlete/activities?access_token=0bd793a821f6cc75aeec8f076e0aeaec350016b2",
-      url: "https://www.strava.com/api/v3/clubs/5591/activities?access_token=ee67aca360a7f571a0004f503cefe45ed9e98028",
+      url: "https://www.strava.com/api/v3/clubs/votary/activities?access_token=" + accessToken,
       success: function(result) {
         console.log(result);
         // $("testApp").html(result);
@@ -52,84 +98,28 @@
         }); // longest distance first
         console.log(result);
         for (var i = 0; i < result.length; i++) {
-          $("#rankTable").append("<tr class='result'><td clas='rank'>"+(i+1)+"<td class='athlete'>"+ result[i]["athlete"]["firstname"] + " " + result[i]["athlete"]["lastname"] + "</td><td class='distance'>"+ result[i]["distance"] +"</td><td class='moving_time'>"+ result[i]["moving_time"] +"</td><td class='elapsed_time'>"+ result[i]["elapsed_time"] + "</td><td class='total_elevation_gain'>"+ result[i]["total_elevation_gain"] +"</td></tr>")
+          $("#rankTable").append("<tr class='result'><td clas='rank'>" + (i + 1) + "<td class='athlete'>" + result[i]["athlete"]["firstname"] + " " + result[i]["athlete"]["lastname"] + "</td><td class='distance'>" + result[i]["distance"] +
+            "</td><td class='moving_time'>" + result[i]["moving_time"] + "</td><td class='elapsed_time'>" + result[i]["elapsed_time"] + "</td><td class='total_elevation_gain'>" + result[i]["total_elevation_gain"] + "</td></tr>")
         }
         // $("#rankTable").append("<tr>"++"<td></td>"++"<td></td>"++"<td></td>"++"<td></td>"++"<td></td>"++"<td></td>"++"<td></td></tr>")
       }
     });
   };
-  doIt();
 
-  // var StravaApiV3 = require('strava_api_v3');
-  // var defaultClient = StravaApiV3.ApiClient.instance;
-  //
-  // // Configure OAuth2 access token for authorization: strava_oauth
-  // var strava_oauth = defaultClient.authentications['strava_oauth'];
-  // strava_oauth.accessToken = "YOUR ACCESS TOKEN"
-  //
-  // var api = new StravaApiV3.ClubsApi()
-  //
-  // var id = 56; // {Integer} The identifier of the club.
-  //
-  // var opts = {
-  //   'page': 56, // {Integer} Page number.
-  //   'perPage': 56 // {Integer} Number of items per page. Defaults to 30.
-  // };
-  //
-  // var callback = function(error, data, response) {
-  //   if (error) {
-  //     console.error(error);
-  //   } else {
-  //     console.log('API called successfully. Returned data: ' + data);
-  //   }
-  // };
-  // api.getClubActivitiesById(id, opts, callback);
+
+  var errorHandler = function(){
+    throw "failure";
+  }
+
+  document.addEventListener("DOMContentLoaded", function() {
+    getFirst()
+      .then(doIt)
+      .catch(errorHandler)
+  })
 </script>
 
-<!-- id
-11052
-
-secret
-0689beebbf2bc637783d4d9d97f298afa28280a4
-
-code
-a5f92c33e150d081edabe2fd55c57c9502d57288
-
-https://www.strava.com/oauth/token?client_id=11052&client_secret=0689beebbf2bc637783d4d9d97f298afa28280a4&code=dfee50221bc46743225d16c206ca65a4e1b56ac2
-&grant_type=authorization_code
-
-https://www.strava.com/oauth/token?client_id=11052&client_secret=0689beebbf2bc637783d4d9d97f298afa28280a4&code=a68f83ffd7d98f21f8d5f8f4d67bbbf58ae4362e&grant_type=authorization_code
-
-{
-    "token_type": "Bearer",
-    "expires_at": 1586557233,
-    "expires_in": 14665,
-    "refresh_token": "03b9dc0e265f7613221fe8df2916066541b4d61c",
-    "access_token": "ee67aca360a7f571a0004f503cefe45ed9e98028",
-    "athlete": {
-        "id": 2448016,
-        "username": null,
-        "resource_state": 2,
-        "firstname": "Alex",
-        "lastname": "Kim",
-        "city": "Chicago",
-        "state": "IL",
-        "country": "United States",
-        "sex": "M",
-        "premium": false,
-        "summit": false,
-        "created_at": "2013-06-29T19:29:30Z",
-        "updated_at": "2020-04-10T16:48:50Z",
-        "badge_type_id": 0,
-        "profile_medium": "https://dgalywyr863hv.cloudfront.net/pictures/athletes/2448016/890623/1/medium.jpg",
-        "profile": "https://dgalywyr863hv.cloudfront.net/pictures/athletes/2448016/890623/1/large.jpg",
-        "friend": null,
-        "follower": null
-    }
-}
-
--->
 
 
 
-<!--<iframe id="stravaWidget" allowtransparency frameborder='0' scrolling='no' src='https://www.strava.com/clubs/619204/latest-rides/51be75ece0f4cec07016c2982de0e78949dbbdf1?show_rides=true' width='100%'></iframe> -->
+
+<iframe id="stravaWidget" allowtransparency frameborder='0' scrolling='no' src='https://www.strava.com/clubs/619204/latest-rides/51be75ece0f4cec07016c2982de0e78949dbbdf1?show_rides=true' width='100%'></iframe>
